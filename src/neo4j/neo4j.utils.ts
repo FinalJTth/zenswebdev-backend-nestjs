@@ -1,8 +1,11 @@
 import neo4j from 'neo4j-driver';
 import { Neo4jConfigInterface } from './config/neo4j-config.interface';
 import { Logger } from '@nestjs/common';
+import { Connection } from 'cypher-query-builder';
+import { Neo4jConfig } from './config/neo4j-config';
 
-export const createDriver = async (config: Neo4jConfigInterface) => {
+export const createDriver = async (pConfig?: Neo4jConfigInterface) => {
+  const config = pConfig || Neo4jConfig;
   const logger = new Logger('Neo4jDriver', true);
   const link = `${config.scheme}://${config.host}:${config.port}`;
   logger.log('Connecting to neo4j database : ' + link);
@@ -45,4 +48,16 @@ export const createDriver = async (config: Neo4jConfigInterface) => {
     });
 
   return driver;
+};
+
+export const createQueryBuilder = (pConfig?: Neo4jConfigInterface) => {
+  const config = pConfig || Neo4jConfig;
+  const logger = new Logger('CypherQueryBuilder', true);
+  const link = `${config.scheme}://${config.host}:${config.port}`;
+  //logger.log('Connecting to neo4j database : ' + link);
+  const database = new Connection(link, {
+    username: config.username,
+    password: config.password,
+  });
+  return database;
 };

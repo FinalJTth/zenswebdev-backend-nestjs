@@ -2,6 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { NEO4J_DRIVER, NEO4J_CONFIG } from './neo4j.const';
 import { Session, session, Result } from 'neo4j-driver';
 import { Logger } from '@nestjs/common';
+import { neo4jgraphql } from 'neo4j-graphql-js';
 
 @Injectable()
 export class Neo4jService {
@@ -33,5 +34,9 @@ export class Neo4jService {
   write(cypher: string, params?: Record<string, any>, database?: string): Result {
     const session = this.getWriteSession(database);
     return session.run(cypher, params);
+  }
+
+  getData(object, params, ctx, resolveInfo) {
+    return neo4jgraphql(object, params, ctx, resolveInfo);
   }
 }
