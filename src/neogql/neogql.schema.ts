@@ -25,23 +25,21 @@ enum Role {
   owner
 }
 
+directive @role(role: Role) on FIELD_DEFINITION
+
 type User {
   username: String! @unique
-  password: String 
-  firstName: String 
-  lastName: String 
+  password: String @role(role:owner)
+  firstName: String @isAuthenticated
+  lastName: String @isAuthenticated
   fullName: String @neo4j_ignore
   email: String 
-  sex: String 
+  sex: String @isAuthenticated
   role: Role
-  profilePicture: String
+  profilePicture: String 
 }
 
 type Query {
-  currentUser: User @cypher(statement: """
-    MATCH (u:User {id: $cypherParams.currentUserId})
-    RETURN u
-  """)
   Login(username: String, password: String): String
 }
 `;

@@ -1,7 +1,11 @@
+import { IsAuthenticatedDirective, HasRoleDirective, HasScopeDirective } from 'graphql-auth-directives';
+import { HasSingleRoleDirective } from './directives/authorization';
 import { GraphQLSchema, makeAugmentedSchema, neo4jgraphql } from 'neo4j-graphql-js';
 import { typeDefs } from './neogql.schema';
 import { Logger } from '@nestjs/common';
 import { createQueryBuilder } from '../neo4j/neo4j.utils';
+import * as jwt from 'jsonwebtoken';
+//const jwt = require('jsonwebtoken');
 
 const resolvers: Record<string, any> = {
   User: {
@@ -24,30 +28,35 @@ const resolvers: Record<string, any> = {
       }
     },
     async Login(object, params, ctx, resolveInfo) {
-      //object.body.query = `{ query: User(username: ${params.username}) { password }}`;
       const dbQueryBuilder = createQueryBuilder();
-      const testUserInfo = (await dbQueryBuilder
+      const userInfos = (await dbQueryBuilder
         .matchNode('user', 'User')
         .where({ 'user.username': params.username })
         .return({
           user: {
             username: 'username',
             password: 'password',
-            firstName: 'firstName',
+            email: 'email',
+            role: 'role',
           },
         })
         .run()) as any;
-      console.log('TEST', testUserInfo);
-      if (params.password !== testUserInfo[0].password) {
-        throw new Error('Invalid password');
-      } else if (testUserInfo.length === 0) {
+      if (userInfos.length === 0) {
         throw new Error("User doesn't exist");
+      } else if (params.password !== userInfos[0].password) {
+        throw new Error('Invalid password');
       }
-      console.log('Password checked');
-      console.log(params);
-      console.log(object);
-      console.log(ctx.req.headers);
-      return 'testjwt';
+
+      const userInfo = userInfos[0];
+      //userInfo['reviews.grandstack.io/roles'] = [userInfo.role];
+      //delete userInfo.role;
+      //console.log(userInfo);
+      const publicKey = jwt.sign(userInfo, process.env.JWT_SECRET);
+      //const decoded = jwt.verify(publicKey, process.env.JWT_SECRET);
+      //console.log(decoded);
+      //console.log(decoded['username']);
+
+      return publicKey;
     },
   },
 };
@@ -59,11 +68,17 @@ export const createAugmentedSchema = (pTypeDefs?: string): GraphQLSchema => {
   const augmentedSchema = makeAugmentedSchema({
     typeDefs: inputTypeDefs,
     resolvers,
+    schemaDirectives: {
+      isAuthenticated: IsAuthenticatedDirective,
+      hasRole: HasSingleRoleDirective,
+      hasScope: HasScopeDirective,
+    },
     config: {
       experimental: true,
       auth: {
         isAuthenticated: true,
         hasRole: true,
+        hasScope: true,
       },
     },
   });
