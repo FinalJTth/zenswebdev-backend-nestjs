@@ -34,6 +34,7 @@ const verifyAndDecodeToken = ({ context }) => {
         message: 'Your token is expired',
       });
     } else {
+      console.error(err);
       throw new AuthorizationError({
         message: 'You are not authorized for this resource',
       });
@@ -78,6 +79,8 @@ export class HasScopeDirective extends SchemaDirectiveVisitor {
         return next(result, args, { ...context, user: decoded }, info);
       }
 
+      console.error('ERROR IN SCOPE');
+
       throw new AuthorizationError({
         message: 'You are not authorized for this resource',
       });
@@ -107,6 +110,8 @@ export class HasScopeDirective extends SchemaDirectiveVisitor {
         if (expectedScopes.some((role) => scopes.indexOf(role) !== -1)) {
           return next(result, args, { ...context, user: decoded }, info);
         }
+        console.error('ERROR IN SCOPE WHEN VISITING OBJECT');
+
         throw new AuthorizationError({
           message: 'You are not authorized for this resource',
         });
@@ -204,6 +209,8 @@ export class HasSingleRoleDirective extends SchemaDirectiveVisitor {
         return next(result, args, { ...context, user: decoded }, info);
       }
 
+      console.error('ERROR IN SINGLE ROLE');
+
       throw new AuthorizationError({
         message: 'You are not authorized for this resource',
       });
@@ -227,6 +234,7 @@ export class HasSingleRoleDirective extends SchemaDirectiveVisitor {
         if (expectedRole === role) {
           return next(result, args, { ...context, user: decoded }, info);
         }
+        console.error('ERROR IN SINGLE ROLE WHEN VISITING OBJECT');
         throw new AuthorizationError({
           message: 'You are not authorized for this resource',
         });

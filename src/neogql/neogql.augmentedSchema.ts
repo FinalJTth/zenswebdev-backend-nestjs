@@ -1,5 +1,11 @@
-import { IsAuthenticatedDirective, HasRoleDirective, HasScopeDirective } from 'graphql-auth-directives';
-import { HasSingleRoleDirective } from './directives/authorization';
+//import { IsAuthenticatedDirective, HasRoleDirective, HasScopeDirective } from 'graphql-auth-directives';
+import {
+  IsAuthenticatedDirective,
+  HasRoleDirective,
+  HasSingleRoleDirective,
+  HasScopeDirective,
+} from './directives/authorization';
+import { GraphQLUpload } from 'graphql-upload';
 import { GraphQLSchema, makeAugmentedSchema, neo4jgraphql } from 'neo4j-graphql-js';
 import { typeDefs } from './neogql.schema';
 import { Logger } from '@nestjs/common';
@@ -7,12 +13,15 @@ import { createQueryBuilder } from '../neo4j/neo4j.utils';
 import * as jwt from 'jsonwebtoken';
 //const jwt = require('jsonwebtoken');
 
+const dbQueryBuilder = createQueryBuilder();
+
 const resolvers: Record<string, any> = {
   User: {
     fullName(object, params, ctx, resolveInfo) {
       return `${object.firstName} ${object.lastName}`;
     },
   },
+  Upload: GraphQLUpload,
   Query: {
     Movie(object, params, ctx, resolveInfo) {
       console.log(object);
@@ -28,7 +37,6 @@ const resolvers: Record<string, any> = {
       }
     },
     async Login(object, params, ctx, resolveInfo) {
-      const dbQueryBuilder = createQueryBuilder();
       const userInfos = (await dbQueryBuilder
         .matchNode('user', 'User')
         .where({ 'user.username': params.username })
@@ -78,8 +86,15 @@ export const createAugmentedSchema = (pTypeDefs?: string): GraphQLSchema => {
       auth: {
         isAuthenticated: true,
         hasRole: true,
-        hasScope: true,
+        hasScope: false,
       },
+      query: {
+        exclude: ['File'],
+      },
+      mutation: {
+        exclude: ['File'],
+      },
+      debug: true,
     },
   });
   logger.log('Finished creating augmented schema');
