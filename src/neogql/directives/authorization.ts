@@ -218,7 +218,7 @@ export class HasSingleRoleDirective extends SchemaDirectiveVisitor {
 
   visitObject(obj) {
     const fields = obj.getFields();
-    const expectedRole = this.args.roles;
+    const expectedRole = this.args.role;
 
     Object.keys(fields).forEach((fieldName) => {
       const field = fields[fieldName];
