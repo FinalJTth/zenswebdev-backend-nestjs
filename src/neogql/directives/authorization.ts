@@ -195,9 +195,8 @@ export class HasSingleRoleDirective extends SchemaDirectiveVisitor {
   }
 
   visitFieldDefinition(field) {
-    const expectedRole = this.args.roles;
+    const expectedRole = this.args.role;
     const next = field.resolve;
-
     field.resolve = function (result, args, context, info) {
       const decoded = verifyAndDecodeToken({ context });
 
