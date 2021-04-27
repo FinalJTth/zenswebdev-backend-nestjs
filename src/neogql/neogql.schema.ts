@@ -26,7 +26,7 @@ enum Role {
 directive @hasRole(role: Role) on FIELD_DEFINITION
 
 type User {
-  username: String! @unique
+  username: String! @id
   password: String! @hasRole(role:owner)
   firstName: String! @search
   lastName: String! @search
@@ -121,7 +121,7 @@ type Mutation {
 }
 
 type Test {
-  id: ID! @unique
-  testfield: String! @unique
+  id: ID!
+  testfield: String! @id
 }
 `;
