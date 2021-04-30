@@ -1,11 +1,21 @@
+const fs = require('fs');
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger } from '@nestjs/common';
 
+const httpsOptions = {
+  key: fs.readFileSync('./secrets/key.pem'),
+  cert: fs.readFileSync('./secrets/cert.pem'),
+};
+
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    httpsOptions,
+  });
   const logger = new Logger('Bootstrap', true);
   const whitelist = process.env.CORS_POLICY_WHITELIST.split(',');
+  console.log(whitelist);
   if (process.env.CORS_POLICY_ENABLE === 'true') {
     logger.log('Enable CORS Policy');
     if (whitelist[0].length === 0) {
@@ -17,7 +27,12 @@ async function bootstrap() {
     app.enableCors({
       origin: (origin, callback) => {
         //console.log(origin);
-        if (!origin || whitelist.indexOf(origin) !== -1) {
+        if (
+          !origin ||
+          whitelist.indexOf(origin) !== -1 ||
+          origin.includes('localhost') ||
+          origin.includes('127.0.0.1')
+        ) {
           //console.log('allowed cors for:', origin);
           callback(null, true);
         } else {
@@ -25,7 +40,8 @@ async function bootstrap() {
           callback(new Error(origin + ' is not whitelisted by CORS'));
         }
       },
-      allowedHeaders: 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Observe, Authorization',
+      allowedHeaders:
+        'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Observe, Authorization, ReactKey',
       methods: 'GET,PUT,POST,DELETE,UPDATE,OPTIONS',
       credentials: true,
     });

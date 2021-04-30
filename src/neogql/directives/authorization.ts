@@ -1,4 +1,4 @@
-import { AuthorizationError } from './errors';
+import { AuthorizationError } from '../neogql.errors';
 import { IncomingMessage } from 'http';
 import * as jwt from 'jsonwebtoken';
 import { SchemaDirectiveVisitor } from 'graphql-tools';

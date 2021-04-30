@@ -28,19 +28,24 @@ directive @hasRole(role: Role) on FIELD_DEFINITION
 type User {
   username: String! @id
   password: String! @hasRole(role:owner)
-  firstName: String! @search
-  lastName: String! @search
-  fullName: String! @neo4j_ignore
-  email: String! @search
-  sex: String! 
+  email: String! @unique
   role: Role! 
   profilePicture: String 
+  personalInfo: PersonalInfo @relation(name: "HAS_PERSONAL_INFO", direction: OUT)
   chats: [Chat] @relation(name: "HAS_CHAT", direction: OUT)
   chatMessages: [ChatMessage] @relation(name: "HAS_MESSAGE", direction: OUT)
 }
 
+type PersonalInfo {
+  firstName: String @search
+  lastName: String @search
+  fullName: String @neo4j_ignore
+  sex: String 
+  user: User @relation(name: "HAS_PERSONAL_INFO", direction: IN)
+}
+
 type Query {
-  Login(username: String!, password: String!): String!
+  Login(username: String, email: String, password: String!): String!
 }
 
 type Chat {
