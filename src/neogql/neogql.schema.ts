@@ -31,12 +31,14 @@ type User {
   password: String! @hasRole(role:owner)
   email: String! @unique @search
   role: Role! 
-  profile: Profile
+  profile: Profile @relation(name: "HAS_PROFILE", direction: OUT)
   chats: [Chat] @relation(name: "HAS_CHAT", direction: OUT)
   chatMessages: [ChatMessage] @relation(name: "HAS_MESSAGE", direction: OUT)
 }
 
 type Profile {
+  user: User @relation(name: "HAS_PROFILE", direction: IN)
+  profileId: ID! @id
   firstName: String @search
   lastName: String @search
   fullName: String @neo4j_ignore

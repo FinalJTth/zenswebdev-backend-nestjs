@@ -1,8 +1,7 @@
 import axios, { AxiosResponse, AxiosRequestConfig } from 'axios';
 import { buildGraphql } from './utils';
-import https from 'https';
-
-const fs = require('fs');
+import * as https from 'https';
+import * as fs from 'fs';
 
 const httpsAgent = new https.Agent({
   rejectUnauthorized: false, // (NOTE: this will disable client verification)

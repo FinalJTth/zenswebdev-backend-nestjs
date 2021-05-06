@@ -71,7 +71,6 @@ const createResolvers = (driver, dbQueryBuilder): Record<string, any> => {
     Mutation: {
       CreateUser: async (object, params, ctx, resolveInfo) => {
         const { username, email, password } = params.data;
-        console.log(params.data);
         const usernameValidation = await axiosGqlServiceQuery('ValidateUsername', { username }, [
           'isInvalid',
           'message',
@@ -83,11 +82,9 @@ const createResolvers = (driver, dbQueryBuilder): Record<string, any> => {
             console.error('Error occured while validating username\n', error.message);
             throw new Error(error.message.split('\n')[0]);
           });
-        console.log('TEst');
         if (usernameValidation.isInvalid) {
           throw new ValidationError({ message: usernameValidation.message });
         }
-        console.log('Username passed');
         const emailValidation = await axiosGqlServiceQuery('ValidateEmail', { email }, ['isInvalid', 'message'])
           .then((res: { data: Record<string, any> }) => {
             return res.data.query;
@@ -99,7 +96,6 @@ const createResolvers = (driver, dbQueryBuilder): Record<string, any> => {
         if (emailValidation.isInvalid) {
           throw new ValidationError({ message: emailValidation.message });
         }
-        console.log('Email passed');
         const passwordValidation = await axiosGqlServiceQuery('ValidatePassword', { password }, [
           'isInvalid',
           'message',
@@ -114,8 +110,10 @@ const createResolvers = (driver, dbQueryBuilder): Record<string, any> => {
         if (passwordValidation.isInvalid) {
           throw new ValidationError({ message: passwordValidation.message });
         }
-        console.log('Password passed');
-        return 'Pass';
+        return neo4jgraphql(object, params, ctx, resolveInfo);
+      },
+      CreateProfile: (object, params, ctx, resolveInfo) => {
+        return neo4jgraphql(object, params, ctx, resolveInfo);
       },
     },
   };
