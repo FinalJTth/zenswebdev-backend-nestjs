@@ -27,12 +27,7 @@ async function bootstrap() {
     app.enableCors({
       origin: (origin, callback) => {
         //console.log(origin);
-        if (
-          !origin ||
-          whitelist.indexOf(origin) !== -1 ||
-          origin.includes('localhost') ||
-          origin.includes('127.0.0.1')
-        ) {
+        if (!origin || whitelist.indexOf(origin) !== -1 || /localhost|127|192|172/.test(origin)) {
           //console.log('allowed cors for:', origin);
           callback(null, true);
         } else {

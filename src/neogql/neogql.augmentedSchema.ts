@@ -10,20 +10,21 @@ import { GraphQLSchema, makeAugmentedSchema, neo4jgraphql, assertSchema, searchS
 import { typeDefs } from './neogql.schema';
 import { Logger } from '@nestjs/common';
 import { createQueryBuilder } from '../neo4j/neo4j.utils';
-import { LoginError } from './neogql.errors';
+import { LoginError, ValidationError } from './neogql.errors';
 import * as jwt from 'jsonwebtoken';
+import { axiosGqlServiceQuery } from '../api';
 //const jwt = require('jsonwebtoken');
 
 const createResolvers = (driver, dbQueryBuilder): Record<string, any> => {
   return {
-    PersonalInfo: {
-      fullName(object, params, ctx, resolveInfo) {
+    Profile: {
+      fullName: (object, params, ctx, resolveInfo) => {
         return `${object.firstName} ${object.lastName}`;
       },
     },
     Upload: GraphQLUpload,
     Query: {
-      Movie(object, params, ctx, resolveInfo) {
+      Movie: (object, params, ctx, resolveInfo) => {
         console.log(object);
         console.log(params);
         //console.log(ctx);
@@ -36,8 +37,7 @@ const createResolvers = (driver, dbQueryBuilder): Record<string, any> => {
           return neo4jgraphql(object, params, ctx, resolveInfo);
         }
       },
-      async Login(object, params, ctx, resolveInfo) {
-        console.log(params);
+      Login: async (object, params, ctx, resolveInfo) => {
         const userInfos = (await dbQueryBuilder
           .matchNode('user', 'User')
           .where(params.username ? { 'user.username': params.username } : { 'user.email': params.email })
@@ -66,6 +66,56 @@ const createResolvers = (driver, dbQueryBuilder): Record<string, any> => {
         //console.log(decoded['username']);
 
         return publicKey;
+      },
+    },
+    Mutation: {
+      CreateUser: async (object, params, ctx, resolveInfo) => {
+        const { username, email, password } = params.data;
+        console.log(params.data);
+        const usernameValidation = await axiosGqlServiceQuery('ValidateUsername', { username }, [
+          'isInvalid',
+          'message',
+        ])
+          .then((res: { data: Record<string, any> }) => {
+            return res.data.query;
+          })
+          .catch((error) => {
+            console.error('Error occured while validating username\n', error.message);
+            throw new Error(error.message.split('\n')[0]);
+          });
+        console.log('TEst');
+        if (usernameValidation.isInvalid) {
+          throw new ValidationError({ message: usernameValidation.message });
+        }
+        console.log('Username passed');
+        const emailValidation = await axiosGqlServiceQuery('ValidateEmail', { email }, ['isInvalid', 'message'])
+          .then((res: { data: Record<string, any> }) => {
+            return res.data.query;
+          })
+          .catch((error) => {
+            console.error('Error occured while validating email\n', error.message);
+            throw new Error(error.message.split('\n')[0]);
+          });
+        if (emailValidation.isInvalid) {
+          throw new ValidationError({ message: emailValidation.message });
+        }
+        console.log('Email passed');
+        const passwordValidation = await axiosGqlServiceQuery('ValidatePassword', { password }, [
+          'isInvalid',
+          'message',
+        ])
+          .then((res: { data: Record<string, any> }) => {
+            return res.data.query;
+          })
+          .catch((error) => {
+            console.error('Error occured while validating password\n', error.message);
+            throw new Error(error.message.split('\n')[0]);
+          });
+        if (passwordValidation.isInvalid) {
+          throw new ValidationError({ message: passwordValidation.message });
+        }
+        console.log('Password passed');
+        return 'Pass';
       },
     },
   };

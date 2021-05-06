@@ -26,22 +26,22 @@ enum Role {
 directive @hasRole(role: Role) on FIELD_DEFINITION
 
 type User {
-  username: String! @id
+  userId: ID! @id
+  username: String! @unique @search
   password: String! @hasRole(role:owner)
-  email: String! @unique
+  email: String! @unique @search
   role: Role! 
-  profilePicture: String 
-  personalInfo: PersonalInfo @relation(name: "HAS_PERSONAL_INFO", direction: OUT)
+  profile: Profile
   chats: [Chat] @relation(name: "HAS_CHAT", direction: OUT)
   chatMessages: [ChatMessage] @relation(name: "HAS_MESSAGE", direction: OUT)
 }
 
-type PersonalInfo {
+type Profile {
   firstName: String @search
   lastName: String @search
   fullName: String @neo4j_ignore
+  profilePicture: String 
   sex: String 
-  user: User @relation(name: "HAS_PERSONAL_INFO", direction: IN)
 }
 
 type Query {
@@ -49,7 +49,7 @@ type Query {
 }
 
 type Chat {
-  chatid: ID! @unique
+  chatId: ID! @unique
   chatname: String!
   startDate: DateTime!
   users: [User] @relation(name: "HAS_CHAT", direction: IN)
